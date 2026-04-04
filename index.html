@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trip Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header id="header"></header>
+  <main>
+    <section id="countdown"></section>
+    <section id="status-summary"></section>
+    <section id="action-items"></section>
+    <section id="timeline"></section>
+  </main>
+  <footer id="footer"></footer>
+
+  <script src="trip-data.js"></script>
+  <script>
+    // ============================================================
+    // Helpers
+    // ============================================================
+    function formatDate(dateStr) {
+      if (!dateStr) return "";
+      const d = new Date(dateStr + (dateStr.includes("T") ? "" : "T00:00"));
+      return d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+    }
+
+    function formatDateLong(dateStr) {
+      if (!dateStr) return "";
+      const d = new Date(dateStr + (dateStr.includes("T") ? "" : "T00:00"));
+      return d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+    }
+
+    function formatTime(dateStr) {
+      if (!dateStr || !dateStr.includes("T")) return "";
+      const d = new Date(dateStr);
+      return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+    }
+
+    function formatDateRange(start, end) {
+      return `${formatDate(start)} \u2013 ${formatDate(end)}`;
+    }
+
+    function daysBetween(a, b) {
+      return Math.ceil((new Date(b) - new Date(a)) / 86400000);
+    }
+
+    function statusLabel(status) {
+      switch (status) {
+        case "booked": return "Booked";
+        case "needs-booking": return "Needs Booking";
+        case "in-progress": return "Researching";
+        default: return status;
+      }
+    }
+
+    function typeIcon(type) {
+      switch (type) {
+        case "flight": return "\u2708\uFE0F";
+        case "hotel": return "\u{1F3E8}";
+        case "train": return "\u{1F682}";
+        case "activity": return "\u{1F4CD}";
+        default: return "\u{1F4CB}";
+      }
+    }
+
+    function typeLabel(type) {
+      switch (type) {
+        case "flight": return "Flights";
+        case "hotel": return "Hotels";
+        case "train": return "Trains";
+        case "activity": return "Activities";
+        default: return type;
+      }
+    }
+
+    function getAllSegments(data) {
+      const segments = [];
+      data.legs.forEach(leg => {
+        leg.segments.forEach(seg => {
+          segments.push({ ...seg, legTitle: leg.title, legEmoji: leg.emoji });
+        });
+      });
+      return segments;
+    }
+
+    // ============================================================
+    // Render: Header
+    // ============================================================
+    function renderHeader(data) {
+      const el = document.getElementById("header");
+      const startDate = formatDateLong(data.trip.startDate);
+      const endDate = formatDateLong(data.trip.endDate);
+      const totalDays = daysBetween(data.trip.startDate, data.trip.endDate);
+
+      el.innerHTML = `
+        <div class="header-content">
+          <h1>\u{1F30D} ${data.trip.name}</h1>
+          <p class="header-dates">${startDate} \u2013 ${endDate} &middot; ${totalDays} days</p>
+          <p class="header-traveler">${data.trip.traveler}'s Trip Dashboard</p>
+        </div>
+      `;
+    }
+
+    // ============================================================
+    // Render: Countdown
+    // ============================================================
+    function renderCountdown(data) {
+      const el = document.getElementById("countdown");
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const start = new Date(data.trip.startDate + "T00:00");
+      const end = new Date(data.trip.endDate + "T00:00");
+
+      let html = "";
+      if (today < start) {
+        const days = daysBetween(today.toISOString(), data.trip.startDate);
+        html = `
+          <div class="countdown-banner countdown-before">
+            <span class="countdown-icon">\u{1F9F3}</span>
+            <span class="countdown-text"><strong>${days} day${days !== 1 ? "s" : ""}</strong> until departure</span>
+          </div>
+        `;
+      } else if (today <= end) {
+        const dayNum = daysBetween(data.trip.startDate, today.toISOString()) + 1;
+        const totalDays = daysBetween(data.trip.startDate, data.trip.endDate);
+        // Find current leg
+        let currentLocation = "";
+        for (const leg of data.legs) {
+          const legStart = new Date(leg.startDate + "T00:00");
+          const legEnd = new Date(leg.endDate + "T00:00");
+          if (today >= legStart && today <= legEnd) {
+            currentLocation = `${leg.emoji} ${leg.location}`;
+            break;
+          }
+        }
+        html = `
+          <div class="countdown-banner countdown-during">
+            <span class="countdown-icon">\u2708\uFE0F</span>
+            <span class="countdown-text">Day <strong>${dayNum}</strong> of ${totalDays}${currentLocation ? ` \u2014 Currently in ${currentLocation}` : ""}</span>
+          </div>
+        `;
+      } else {
+        const totalDays = daysBetween(data.trip.startDate, data.trip.endDate);
+        html = `
+          <div class="countdown-banner countdown-after">
+            <span class="countdown-icon">\u2728</span>
+            <span class="countdown-text">Trip completed! ${totalDays} amazing days of travel</span>
+          </div>
+        `;
+      }
+      el.innerHTML = html;
+    }
+
+    // ============================================================
+    // Render: Status Summary
+    // ============================================================
+    function renderStatusSummary(data) {
+      const el = document.getElementById("status-summary");
+      const stats = {};
+      const allSegments = getAllSegments(data);
+
+      allSegments.forEach(seg => {
+        if (seg.type === "activity") return; // don't count activities
+        if (!stats[seg.type]) stats[seg.type] = { total: 0, booked: 0 };
+        stats[seg.type].total++;
+        if (seg.status === "booked") stats[seg.type].booked++;
+      });
+
+      const totalBookable = Object.values(stats).reduce((sum, s) => sum + s.total, 0);
+      const totalBooked = Object.values(stats).reduce((sum, s) => sum + s.booked, 0);
+      const pct = totalBookable > 0 ? Math.round((totalBooked / totalBookable) * 100) : 100;
+
+      let cardsHtml = "";
+      const typeOrder = ["flight", "hotel", "train"];
+      typeOrder.forEach(type => {
+        if (!stats[type]) return;
+        const s = stats[type];
+        const statusClass = s.booked === s.total ? "stat-complete" : s.booked > 0 ? "stat-partial" : "stat-none";
+        cardsHtml += `
+          <div class="stat-card ${statusClass}">
+            <div class="stat-icon">${typeIcon(type)}</div>
+            <div class="stat-info">
+              <div class="stat-label">${typeLabel(type)}</div>
+              <div class="stat-value">${s.booked} / ${s.total} booked</div>
+            </div>
+          </div>
+        `;
+      });
+
+      el.innerHTML = `
+        <div class="status-bar">
+          <div class="overall-progress">
+            <div class="progress-text">${totalBooked} of ${totalBookable} items booked (${pct}%)</div>
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: ${pct}%"></div>
+            </div>
+          </div>
+          <div class="stat-cards">${cardsHtml}</div>
+        </div>
+      `;
+    }
+
+    // ============================================================
+    // Render: Action Items
+    // ============================================================
+    function renderActionItems(data) {
+      const el = document.getElementById("action-items");
+      const allSegments = getAllSegments(data);
+      const pending = allSegments.filter(s => s.status !== "booked" && s.type !== "activity");
+
+      if (pending.length === 0) {
+        el.innerHTML = `
+          <div class="action-panel action-complete">
+            <span class="action-icon">\u2705</span>
+            <span>All bookings confirmed! You're all set.</span>
+          </div>
+        `;
+        return;
+      }
+
+      let listHtml = pending.map(seg => {
+        const dateInfo = getSegmentDateSummary(seg);
+        return `
+          <li class="action-item">
+            <span class="action-type-icon">${typeIcon(seg.type)}</span>
+            <span class="action-title">${seg.title}</span>
+            ${dateInfo ? `<span class="action-date">${dateInfo}</span>` : ""}
+            <span class="action-leg">${seg.legEmoji} ${seg.legTitle}</span>
+          </li>
+        `;
+      }).join("");
+
+      el.innerHTML = `
+        <div class="action-panel action-pending">
+          <h2>\u{1F4CB} Still Need to Book (${pending.length})</h2>
+          <ul class="action-list">${listHtml}</ul>
+        </div>
+      `;
+    }
+
+    function getSegmentDateSummary(seg) {
+      const d = seg.details;
+      if (seg.type === "hotel" && d.checkIn && d.checkOut) {
+        return `${formatDate(d.checkIn)} \u2013 ${formatDate(d.checkOut)}`;
+      }
+      if (seg.type === "flight" && d.departure && d.departure.dateTime) {
+        return formatDate(d.departure.dateTime);
+      }
+      if (seg.type === "train" && d.departure && d.departure.dateTime) {
+        return formatDate(d.departure.dateTime);
+      }
+      return "";
+    }
+
+    // ============================================================
+    // Render: Timeline
+    // ============================================================
+    function renderTimeline(data) {
+      const el = document.getElementById("timeline");
+      let html = '<div class="timeline">';
+
+      data.legs.forEach((leg, i) => {
+        const dateRange = formatDateRange(leg.startDate, leg.endDate);
+        const days = daysBetween(leg.startDate, leg.endDate);
+
+        html += `
+          <div class="leg" id="${leg.id}">
+            <div class="leg-header">
+              <div class="leg-marker">
+                <span class="leg-number">${i + 1}</span>
+              </div>
+              <div class="leg-info">
+                <h2 class="leg-title">${leg.emoji} ${leg.title}</h2>
+                <p class="leg-meta">${leg.location} &middot; ${dateRange} &middot; ${days} day${days !== 1 ? "s" : ""}</p>
+              </div>
+            </div>
+            <div class="segments-grid">
+              ${leg.segments.map(seg => renderSegmentCard(seg)).join("")}
+            </div>
+          </div>
+        `;
+      });
+
+      html += "</div>";
+      el.innerHTML = html;
+    }
+
+    // ============================================================
+    // Render: Segment Card
+    // ============================================================
+    function renderSegmentCard(seg) {
+      const statusClass = `status-${seg.status}`;
+      const details = renderSegmentDetails(seg);
+
+      return `
+        <div class="segment-card ${statusClass}">
+          <div class="segment-header">
+            <span class="segment-type-icon">${typeIcon(seg.type)}</span>
+            <h3 class="segment-title">${seg.title}</h3>
+            <span class="status-badge ${statusClass}">${statusLabel(seg.status)}</span>
+          </div>
+          <div class="segment-details">${details}</div>
+          ${seg.details.notes ? `<p class="segment-notes">${seg.details.notes}</p>` : ""}
+        </div>
+      `;
+    }
+
+    function renderSegmentDetails(seg) {
+      switch (seg.type) {
+        case "flight": return renderFlightDetails(seg.details);
+        case "hotel": return renderHotelDetails(seg.details);
+        case "train": return renderTrainDetails(seg.details);
+        case "activity": return renderActivityDetails(seg.details);
+        default: return "";
+      }
+    }
+
+    function renderFlightDetails(d) {
+      let html = '<div class="detail-grid">';
+
+      if (d.airline) {
+        html += `<div class="detail-row"><span class="detail-label">Airline</span><span class="detail-value">${d.airline}</span></div>`;
+      }
+      if (d.flightNumber) {
+        html += `<div class="detail-row"><span class="detail-label">Flight</span><span class="detail-value">${d.flightNumber}</span></div>`;
+      }
+      if (d.departure && d.departure.dateTime) {
+        html += `<div class="detail-row"><span class="detail-label">Departs</span><span class="detail-value">${formatDate(d.departure.dateTime)} at ${formatTime(d.departure.dateTime)} (${d.departure.airport})</span></div>`;
+      }
+      if (d.arrival && d.arrival.dateTime) {
+        html += `<div class="detail-row"><span class="detail-label">Arrives</span><span class="detail-value">${formatDate(d.arrival.dateTime)} at ${formatTime(d.arrival.dateTime)} (${d.arrival.airport})</span></div>`;
+      }
+      if (d.duration) {
+        html += `<div class="detail-row"><span class="detail-label">Duration</span><span class="detail-value">${d.duration}</span></div>`;
+      }
+      if (d.layovers && d.layovers.length > 0) {
+        const layoverStr = d.layovers.map(l => `${l.city} (${l.airport}) \u2014 ${l.duration}`).join(", ");
+        html += `<div class="detail-row"><span class="detail-label">Layover${d.layovers.length > 1 ? "s" : ""}</span><span class="detail-value">${layoverStr}</span></div>`;
+      }
+      if (d.confirmationCode) {
+        html += `<div class="detail-row"><span class="detail-label">Confirmation</span><span class="detail-value detail-code">${d.confirmationCode}</span></div>`;
+      }
+
+      html += "</div>";
+      return html;
+    }
+
+    function renderHotelDetails(d) {
+      let html = '<div class="detail-grid">';
+
+      if (d.hotelName) {
+        html += `<div class="detail-row"><span class="detail-label">Hotel</span><span class="detail-value">${d.hotelName}</span></div>`;
+      }
+      if (d.address) {
+        html += `<div class="detail-row"><span class="detail-label">Address</span><span class="detail-value">${d.address}</span></div>`;
+      }
+      if (d.checkIn) {
+        html += `<div class="detail-row"><span class="detail-label">Check-in</span><span class="detail-value">${formatDate(d.checkIn)}</span></div>`;
+      }
+      if (d.checkOut) {
+        html += `<div class="detail-row"><span class="detail-label">Check-out</span><span class="detail-value">${formatDate(d.checkOut)}</span></div>`;
+      }
+      if (d.nights) {
+        html += `<div class="detail-row"><span class="detail-label">Nights</span><span class="detail-value">${d.nights}</span></div>`;
+      }
+      if (d.confirmationCode) {
+        html += `<div class="detail-row"><span class="detail-label">Confirmation</span><span class="detail-value detail-code">${d.confirmationCode}</span></div>`;
+      }
+
+      html += "</div>";
+      return html;
+    }
+
+    function renderTrainDetails(d) {
+      let html = '<div class="detail-grid">';
+
+      if (d.operator) {
+        html += `<div class="detail-row"><span class="detail-label">Operator</span><span class="detail-value">${d.operator}</span></div>`;
+      }
+      if (d.trainNumber) {
+        html += `<div class="detail-row"><span class="detail-label">Train</span><span class="detail-value">${d.trainNumber}</span></div>`;
+      }
+      if (d.departure && d.departure.dateTime) {
+        html += `<div class="detail-row"><span class="detail-label">Departs</span><span class="detail-value">${formatDate(d.departure.dateTime)} at ${formatTime(d.departure.dateTime)} (${d.departure.station})</span></div>`;
+      } else if (d.departure && d.departure.station) {
+        html += `<div class="detail-row"><span class="detail-label">From</span><span class="detail-value">${d.departure.station}</span></div>`;
+      }
+      if (d.arrival && d.arrival.dateTime) {
+        html += `<div class="detail-row"><span class="detail-label">Arrives</span><span class="detail-value">${formatDate(d.arrival.dateTime)} at ${formatTime(d.arrival.dateTime)} (${d.arrival.station})</span></div>`;
+      } else if (d.arrival && d.arrival.station) {
+        html += `<div class="detail-row"><span class="detail-label">To</span><span class="detail-value">${d.arrival.station}</span></div>`;
+      }
+      if (d.duration) {
+        html += `<div class="detail-row"><span class="detail-label">Duration</span><span class="detail-value">${d.duration}</span></div>`;
+      }
+      if (d.confirmationCode) {
+        html += `<div class="detail-row"><span class="detail-label">Confirmation</span><span class="detail-value detail-code">${d.confirmationCode}</span></div>`;
+      }
+
+      html += "</div>";
+      return html;
+    }
+
+    function renderActivityDetails(d) {
+      let html = '<div class="detail-grid">';
+
+      if (d.description) {
+        html += `<div class="detail-row"><span class="detail-label">Details</span><span class="detail-value">${d.description}</span></div>`;
+      }
+      if (d.startDate && d.endDate) {
+        html += `<div class="detail-row"><span class="detail-label">Dates</span><span class="detail-value">${formatDateRange(d.startDate, d.endDate)}</span></div>`;
+      }
+
+      html += "</div>";
+      return html;
+    }
+
+    // ============================================================
+    // Render: Footer
+    // ============================================================
+    function renderFooter() {
+      const el = document.getElementById("footer");
+      el.innerHTML = `
+        <div class="footer-content">
+          <p>Last viewed: ${new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</p>
+          <p class="footer-note">Edit <code>trip-data.js</code> on GitHub to update bookings</p>
+        </div>
+      `;
+    }
+
+    // ============================================================
+    // Init
+    // ============================================================
+    function init() {
+      const data = window.TRIP_DATA;
+      if (!data) {
+        document.body.innerHTML = '<p style="padding:2rem;color:red;">Error: trip-data.js not found or has a syntax error.</p>';
+        return;
+      }
+
+      document.title = `${data.trip.name} | Trip Dashboard`;
+      renderHeader(data);
+      renderCountdown(data);
+      renderStatusSummary(data);
+      renderActionItems(data);
+      renderTimeline(data);
+      renderFooter();
+    }
+
+    document.addEventListener("DOMContentLoaded", init);
+  </script>
+</body>
+</html>

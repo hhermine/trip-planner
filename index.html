@@ -7,6 +7,21 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <!-- Password Gate -->
+  <div id="password-gate">
+    <div class="gate-card">
+      <div class="gate-icon">\u{1F30D}</div>
+      <h1 class="gate-title">Trip Dashboard</h1>
+      <p class="gate-subtitle">Enter the password to view the itinerary</p>
+      <div class="gate-form">
+        <input type="password" id="gate-input" placeholder="Password" autocomplete="off">
+        <button id="gate-btn" onclick="checkPassword()">Enter</button>
+      </div>
+      <p id="gate-error" class="gate-error" hidden>Wrong password, try again.</p>
+    </div>
+  </div>
+
+  <div id="app-content" hidden>
   <header id="header"></header>
   <main>
     <section id="countdown"></section>
@@ -15,6 +30,8 @@
     <section id="timeline"></section>
   </main>
   <footer id="footer"></footer>
+
+  </div><!-- end #app-content -->
 
   <!-- Settings Modal -->
   <div id="settings-modal" class="modal-overlay" hidden>
@@ -1079,7 +1096,39 @@
       renderAll();
     }
 
-    document.addEventListener("DOMContentLoaded", init);
+    // ============================================================
+    // Password Gate
+    // ============================================================
+    const SITE_PASSWORD = "TheWeeknd";
+
+    function checkPassword() {
+      const input = document.getElementById("gate-input");
+      if (input.value === SITE_PASSWORD) {
+        sessionStorage.setItem("trip_authed", "1");
+        showApp();
+      } else {
+        document.getElementById("gate-error").hidden = false;
+        input.value = "";
+        input.focus();
+      }
+    }
+
+    function showApp() {
+      document.getElementById("password-gate").hidden = true;
+      document.getElementById("app-content").hidden = false;
+      init();
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      if (sessionStorage.getItem("trip_authed") === "1") {
+        showApp();
+      } else {
+        document.getElementById("gate-input").addEventListener("keydown", (e) => {
+          if (e.key === "Enter") checkPassword();
+        });
+        document.getElementById("gate-input").focus();
+      }
+    });
 
     // Close modals on overlay click
     document.addEventListener("click", (e) => {

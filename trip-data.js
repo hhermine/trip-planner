@@ -13,7 +13,7 @@ window.TRIP_DATA = {
     name: "Armenia, Copenhagen & Stockholm",
     startDate: "2026-07-25",
     endDate: "2026-08-13",
-    traveler: "Hermine",
+    traveler: "",
     year: 2026
   },
 

@@ -778,7 +778,7 @@
           ${settingsBtn}
           <h1>\u{1F30D} ${escapeHtml(data.trip.name)}</h1>
           <p class="header-dates">${startDate} \u2013 ${endDate} &middot; ${totalDays} days</p>
-          <p class="header-traveler">${escapeHtml(data.trip.traveler)}'s Trip Dashboard</p>
+          ${data.trip.traveler ? `<p class="header-traveler">${escapeHtml(data.trip.traveler)}'s Trip Dashboard</p>` : ""}
         </div>
       `;
     }

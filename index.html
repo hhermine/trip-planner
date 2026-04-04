@@ -16,8 +16,266 @@
   </main>
   <footer id="footer"></footer>
 
+  <!-- Settings Modal -->
+  <div id="settings-modal" class="modal-overlay" hidden>
+    <div class="modal-card modal-sm">
+      <div class="modal-header">
+        <h2>Settings</h2>
+        <button class="modal-close" onclick="closeSettings()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="settings-repo">Repository</label>
+          <input type="text" id="settings-repo" placeholder="owner/repo" value="hhermine/trip-planner">
+        </div>
+        <div class="form-group">
+          <label for="settings-token">GitHub Personal Access Token</label>
+          <input type="password" id="settings-token" placeholder="ghp_xxxxxxxxxxxx">
+          <p class="form-hint">
+            Need a token? Go to GitHub &rarr; Settings &rarr; Developer settings &rarr;
+            Personal access tokens &rarr; Fine-grained tokens. Give it <strong>Contents: Read and write</strong> permission for your trip-planner repo.
+          </p>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-secondary" id="settings-test-btn" onclick="testConnection()">Test Connection</button>
+          <button class="btn btn-primary" onclick="saveSettings()">Save</button>
+        </div>
+        <div id="settings-status"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit/Add Segment Modal -->
+  <div id="edit-modal" class="modal-overlay" hidden>
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 id="edit-modal-title">Edit Segment</h2>
+        <button class="modal-close" onclick="closeEditModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group form-group-half">
+            <label for="edit-type">Type</label>
+            <select id="edit-type" onchange="onTypeChange()">
+              <option value="flight">Flight</option>
+              <option value="hotel">Hotel</option>
+              <option value="train">Train</option>
+              <option value="activity">Activity</option>
+            </select>
+          </div>
+          <div class="form-group form-group-half">
+            <label for="edit-status">Status</label>
+            <select id="edit-status">
+              <option value="booked">Booked</option>
+              <option value="needs-booking">Needs Booking</option>
+              <option value="in-progress">Researching</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="edit-title">Title</label>
+          <input type="text" id="edit-title" placeholder="e.g. SFO to CPH">
+        </div>
+
+        <!-- Flight fields -->
+        <div id="fields-flight" class="type-fields">
+          <div class="form-row">
+            <div class="form-group form-group-half">
+              <label for="f-airline">Airline</label>
+              <input type="text" id="f-airline" placeholder="SAS Scandinavian Airlines">
+            </div>
+            <div class="form-group form-group-half">
+              <label for="f-flight-num">Flight Number</label>
+              <input type="text" id="f-flight-num" placeholder="SK 935">
+            </div>
+          </div>
+          <fieldset class="form-fieldset">
+            <legend>Departure</legend>
+            <div class="form-row">
+              <div class="form-group form-group-third">
+                <label for="f-dep-airport">Airport</label>
+                <input type="text" id="f-dep-airport" placeholder="SFO">
+              </div>
+              <div class="form-group form-group-third">
+                <label for="f-dep-city">City</label>
+                <input type="text" id="f-dep-city" placeholder="San Francisco">
+              </div>
+              <div class="form-group form-group-third">
+                <label for="f-dep-datetime">Date & Time</label>
+                <input type="datetime-local" id="f-dep-datetime">
+              </div>
+            </div>
+          </fieldset>
+          <fieldset class="form-fieldset">
+            <legend>Arrival</legend>
+            <div class="form-row">
+              <div class="form-group form-group-third">
+                <label for="f-arr-airport">Airport</label>
+                <input type="text" id="f-arr-airport" placeholder="CPH">
+              </div>
+              <div class="form-group form-group-third">
+                <label for="f-arr-city">City</label>
+                <input type="text" id="f-arr-city" placeholder="Copenhagen">
+              </div>
+              <div class="form-group form-group-third">
+                <label for="f-arr-datetime">Date & Time</label>
+                <input type="datetime-local" id="f-arr-datetime">
+              </div>
+            </div>
+          </fieldset>
+          <div class="form-row">
+            <div class="form-group form-group-half">
+              <label for="f-duration">Duration</label>
+              <input type="text" id="f-duration" placeholder="10h 15m">
+            </div>
+            <div class="form-group form-group-half">
+              <label for="f-confirmation">Confirmation Code</label>
+              <input type="text" id="f-confirmation" placeholder="ABC123">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="f-layovers">Layovers (one per line: Airport, City, Duration)</label>
+            <textarea id="f-layovers" rows="2" placeholder="RIX, Riga, 45m"></textarea>
+          </div>
+        </div>
+
+        <!-- Hotel fields -->
+        <div id="fields-hotel" class="type-fields" hidden>
+          <div class="form-group">
+            <label for="h-name">Hotel Name</label>
+            <input type="text" id="h-name" placeholder="Hotel name">
+          </div>
+          <div class="form-group">
+            <label for="h-address">Address</label>
+            <input type="text" id="h-address" placeholder="123 Street, City">
+          </div>
+          <div class="form-row">
+            <div class="form-group form-group-third">
+              <label for="h-checkin">Check-in</label>
+              <input type="date" id="h-checkin">
+            </div>
+            <div class="form-group form-group-third">
+              <label for="h-checkout">Check-out</label>
+              <input type="date" id="h-checkout">
+            </div>
+            <div class="form-group form-group-third">
+              <label for="h-nights">Nights</label>
+              <input type="number" id="h-nights" min="1" placeholder="1">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="h-confirmation">Confirmation Code</label>
+            <input type="text" id="h-confirmation" placeholder="ABC123">
+          </div>
+        </div>
+
+        <!-- Train fields -->
+        <div id="fields-train" class="type-fields" hidden>
+          <div class="form-row">
+            <div class="form-group form-group-half">
+              <label for="t-operator">Operator</label>
+              <input type="text" id="t-operator" placeholder="SJ">
+            </div>
+            <div class="form-group form-group-half">
+              <label for="t-train-num">Train Number</label>
+              <input type="text" id="t-train-num" placeholder="123">
+            </div>
+          </div>
+          <fieldset class="form-fieldset">
+            <legend>Departure</legend>
+            <div class="form-row">
+              <div class="form-group form-group-third">
+                <label for="t-dep-station">Station</label>
+                <input type="text" id="t-dep-station" placeholder="Stockholm Central">
+              </div>
+              <div class="form-group form-group-third">
+                <label for="t-dep-city">City</label>
+                <input type="text" id="t-dep-city" placeholder="Stockholm">
+              </div>
+              <div class="form-group form-group-third">
+                <label for="t-dep-datetime">Date & Time</label>
+                <input type="datetime-local" id="t-dep-datetime">
+              </div>
+            </div>
+          </fieldset>
+          <fieldset class="form-fieldset">
+            <legend>Arrival</legend>
+            <div class="form-row">
+              <div class="form-group form-group-third">
+                <label for="t-arr-station">Station</label>
+                <input type="text" id="t-arr-station" placeholder="Copenhagen Central">
+              </div>
+              <div class="form-group form-group-third">
+                <label for="t-arr-city">City</label>
+                <input type="text" id="t-arr-city" placeholder="Copenhagen">
+              </div>
+              <div class="form-group form-group-third">
+                <label for="t-arr-datetime">Date & Time</label>
+                <input type="datetime-local" id="t-arr-datetime">
+              </div>
+            </div>
+          </fieldset>
+          <div class="form-row">
+            <div class="form-group form-group-half">
+              <label for="t-duration">Duration</label>
+              <input type="text" id="t-duration" placeholder="5h 00m">
+            </div>
+            <div class="form-group form-group-half">
+              <label for="t-confirmation">Confirmation Code</label>
+              <input type="text" id="t-confirmation" placeholder="ABC123">
+            </div>
+          </div>
+        </div>
+
+        <!-- Activity fields -->
+        <div id="fields-activity" class="type-fields" hidden>
+          <div class="form-group">
+            <label for="a-description">Description</label>
+            <textarea id="a-description" rows="2" placeholder="What you'll be doing"></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group form-group-half">
+              <label for="a-start">Start Date</label>
+              <input type="date" id="a-start">
+            </div>
+            <div class="form-group form-group-half">
+              <label for="a-end">End Date</label>
+              <input type="date" id="a-end">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="edit-notes">Notes</label>
+          <textarea id="edit-notes" rows="2" placeholder="Any additional notes"></textarea>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn-danger" id="edit-delete-btn" onclick="deleteSegment()" hidden>Delete</button>
+          <div class="form-actions-right">
+            <button class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+            <button class="btn btn-primary" id="edit-save-btn" onclick="saveSegment()">Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast" hidden></div>
+
   <script src="trip-data.js"></script>
   <script>
+    // ============================================================
+    // State
+    // ============================================================
+    let editingLegId = null;
+    let editingSegId = null; // null = adding new
+
+    function isEditable() {
+      return !!localStorage.getItem("gh_token");
+    }
+
     // ============================================================
     // Helpers
     // ============================================================
@@ -86,6 +344,406 @@
       return segments;
     }
 
+    // Convert datetime-local value to ISO-ish string for data
+    function dtLocalToData(val) {
+      return val || "";
+    }
+
+    // Convert data datetime to datetime-local input value
+    function dataToDatetimeLocal(val) {
+      if (!val) return "";
+      // Already in "YYYY-MM-DDTHH:MM" format
+      return val.substring(0, 16);
+    }
+
+    function escapeHtml(str) {
+      if (!str) return "";
+      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+
+    // ============================================================
+    // Toast notifications
+    // ============================================================
+    function showToast(message, type) {
+      const el = document.getElementById("toast");
+      el.textContent = message;
+      el.className = "toast toast-" + type;
+      el.hidden = false;
+      clearTimeout(el._timer);
+      el._timer = setTimeout(() => { el.hidden = true; }, 3500);
+    }
+
+    // ============================================================
+    // Settings
+    // ============================================================
+    function openSettings() {
+      document.getElementById("settings-repo").value = localStorage.getItem("gh_repo") || "hhermine/trip-planner";
+      document.getElementById("settings-token").value = localStorage.getItem("gh_token") || "";
+      document.getElementById("settings-status").innerHTML = "";
+      document.getElementById("settings-modal").hidden = false;
+    }
+
+    function closeSettings() {
+      document.getElementById("settings-modal").hidden = true;
+    }
+
+    function saveSettings() {
+      const repo = document.getElementById("settings-repo").value.trim();
+      const token = document.getElementById("settings-token").value.trim();
+      if (!repo || !token) {
+        document.getElementById("settings-status").innerHTML = '<p class="form-error">Both fields are required.</p>';
+        return;
+      }
+      localStorage.setItem("gh_repo", repo);
+      localStorage.setItem("gh_token", token);
+      closeSettings();
+      showToast("Settings saved!", "success");
+      renderAll();
+    }
+
+    async function testConnection() {
+      const repo = document.getElementById("settings-repo").value.trim();
+      const token = document.getElementById("settings-token").value.trim();
+      const statusEl = document.getElementById("settings-status");
+      const btn = document.getElementById("settings-test-btn");
+
+      if (!repo || !token) {
+        statusEl.innerHTML = '<p class="form-error">Fill in both fields first.</p>';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = "Testing...";
+      statusEl.innerHTML = "";
+
+      try {
+        const res = await fetch(`https://api.github.com/repos/${repo}`, {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          statusEl.innerHTML = `<p class="form-success">Connected to <strong>${data.full_name}</strong></p>`;
+        } else {
+          statusEl.innerHTML = `<p class="form-error">Failed: ${res.status} ${res.statusText}</p>`;
+        }
+      } catch (e) {
+        statusEl.innerHTML = `<p class="form-error">Network error: ${e.message}</p>`;
+      }
+      btn.disabled = false;
+      btn.textContent = "Test Connection";
+    }
+
+    // ============================================================
+    // GitHub API: Commit trip-data.js
+    // ============================================================
+    async function commitTripData(message) {
+      const repo = localStorage.getItem("gh_repo");
+      const token = localStorage.getItem("gh_token");
+      if (!repo || !token) throw new Error("GitHub not configured");
+
+      const apiBase = `https://api.github.com/repos/${repo}/contents/trip-data.js`;
+      const headers = {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      };
+
+      // Get current SHA
+      const getRes = await fetch(apiBase, { headers });
+      if (!getRes.ok) throw new Error(`Failed to get file: ${getRes.status}`);
+      const fileData = await getRes.json();
+
+      // Serialize current TRIP_DATA
+      const fileContent = serializeTripData(window.TRIP_DATA);
+      const encoded = btoa(unescape(encodeURIComponent(fileContent)));
+
+      // PUT update
+      const putRes = await fetch(apiBase, {
+        method: "PUT",
+        headers,
+        body: JSON.stringify({
+          message: message,
+          content: encoded,
+          sha: fileData.sha
+        })
+      });
+
+      if (!putRes.ok) {
+        const err = await putRes.json();
+        throw new Error(err.message || `HTTP ${putRes.status}`);
+      }
+    }
+
+    function serializeTripData(data) {
+      const header =
+`// ============================================================
+// TRIP DATA - Edit via the dashboard UI or directly in this file
+// ============================================================
+// STATUS values:  "booked" | "needs-booking" | "in-progress"
+// TYPE values:    "flight" | "hotel" | "train" | "activity"
+// ============================================================
+
+`;
+      return header + "window.TRIP_DATA = " + JSON.stringify(data, null, 2) + ";\n";
+    }
+
+    // ============================================================
+    // Edit Modal
+    // ============================================================
+    function openEditModal(legId, segId) {
+      editingLegId = legId;
+      editingSegId = segId;
+
+      const isNew = !segId;
+      document.getElementById("edit-modal-title").textContent = isNew ? "Add Segment" : "Edit Segment";
+      document.getElementById("edit-delete-btn").hidden = isNew;
+      document.getElementById("edit-type").disabled = !isNew;
+
+      if (isNew) {
+        // Defaults for new segment
+        document.getElementById("edit-type").value = "hotel";
+        document.getElementById("edit-status").value = "needs-booking";
+        document.getElementById("edit-title").value = "";
+        document.getElementById("edit-notes").value = "";
+        clearAllTypeFields();
+        onTypeChange();
+      } else {
+        // Load existing segment data
+        const seg = findSegment(legId, segId);
+        if (!seg) return;
+
+        document.getElementById("edit-type").value = seg.type;
+        document.getElementById("edit-status").value = seg.status;
+        document.getElementById("edit-title").value = seg.title;
+        document.getElementById("edit-notes").value = seg.details.notes || "";
+        clearAllTypeFields();
+        loadTypeFields(seg);
+        onTypeChange();
+      }
+
+      document.getElementById("edit-modal").hidden = false;
+    }
+
+    function closeEditModal() {
+      document.getElementById("edit-modal").hidden = true;
+      editingLegId = null;
+      editingSegId = null;
+    }
+
+    function onTypeChange() {
+      const type = document.getElementById("edit-type").value;
+      document.querySelectorAll(".type-fields").forEach(el => el.hidden = true);
+      document.getElementById("fields-" + type).hidden = false;
+    }
+
+    function clearAllTypeFields() {
+      document.querySelectorAll(".type-fields input, .type-fields textarea").forEach(el => {
+        el.value = "";
+      });
+    }
+
+    function findSegment(legId, segId) {
+      const leg = window.TRIP_DATA.legs.find(l => l.id === legId);
+      if (!leg) return null;
+      return leg.segments.find(s => s.id === segId);
+    }
+
+    function loadTypeFields(seg) {
+      const d = seg.details;
+      switch (seg.type) {
+        case "flight":
+          document.getElementById("f-airline").value = d.airline || "";
+          document.getElementById("f-flight-num").value = d.flightNumber || "";
+          document.getElementById("f-dep-airport").value = d.departure ? d.departure.airport : "";
+          document.getElementById("f-dep-city").value = d.departure ? d.departure.city : "";
+          document.getElementById("f-dep-datetime").value = d.departure ? dataToDatetimeLocal(d.departure.dateTime) : "";
+          document.getElementById("f-arr-airport").value = d.arrival ? d.arrival.airport : "";
+          document.getElementById("f-arr-city").value = d.arrival ? d.arrival.city : "";
+          document.getElementById("f-arr-datetime").value = d.arrival ? dataToDatetimeLocal(d.arrival.dateTime) : "";
+          document.getElementById("f-duration").value = d.duration || "";
+          document.getElementById("f-confirmation").value = d.confirmationCode || "";
+          if (d.layovers && d.layovers.length > 0) {
+            document.getElementById("f-layovers").value = d.layovers.map(l => `${l.airport}, ${l.city}, ${l.duration}`).join("\n");
+          }
+          break;
+        case "hotel":
+          document.getElementById("h-name").value = d.hotelName || "";
+          document.getElementById("h-address").value = d.address || "";
+          document.getElementById("h-checkin").value = d.checkIn || "";
+          document.getElementById("h-checkout").value = d.checkOut || "";
+          document.getElementById("h-nights").value = d.nights || "";
+          document.getElementById("h-confirmation").value = d.confirmationCode || "";
+          break;
+        case "train":
+          document.getElementById("t-operator").value = d.operator || "";
+          document.getElementById("t-train-num").value = d.trainNumber || "";
+          document.getElementById("t-dep-station").value = d.departure ? d.departure.station : "";
+          document.getElementById("t-dep-city").value = d.departure ? d.departure.city : "";
+          document.getElementById("t-dep-datetime").value = d.departure ? dataToDatetimeLocal(d.departure.dateTime) : "";
+          document.getElementById("t-arr-station").value = d.arrival ? d.arrival.station : "";
+          document.getElementById("t-arr-city").value = d.arrival ? d.arrival.city : "";
+          document.getElementById("t-arr-datetime").value = d.arrival ? dataToDatetimeLocal(d.arrival.dateTime) : "";
+          document.getElementById("t-duration").value = d.duration || "";
+          document.getElementById("t-confirmation").value = d.confirmationCode || "";
+          break;
+        case "activity":
+          document.getElementById("a-description").value = d.description || "";
+          document.getElementById("a-start").value = d.startDate || "";
+          document.getElementById("a-end").value = d.endDate || "";
+          break;
+      }
+    }
+
+    function buildSegmentFromForm() {
+      const type = document.getElementById("edit-type").value;
+      const seg = {
+        id: editingSegId || "seg-" + type + "-" + Date.now(),
+        type: type,
+        status: document.getElementById("edit-status").value,
+        title: document.getElementById("edit-title").value.trim(),
+        details: {}
+      };
+
+      const notes = document.getElementById("edit-notes").value.trim();
+
+      switch (type) {
+        case "flight":
+          seg.details = {
+            airline: document.getElementById("f-airline").value.trim(),
+            flightNumber: document.getElementById("f-flight-num").value.trim(),
+            departure: {
+              airport: document.getElementById("f-dep-airport").value.trim(),
+              city: document.getElementById("f-dep-city").value.trim(),
+              dateTime: dtLocalToData(document.getElementById("f-dep-datetime").value)
+            },
+            arrival: {
+              airport: document.getElementById("f-arr-airport").value.trim(),
+              city: document.getElementById("f-arr-city").value.trim(),
+              dateTime: dtLocalToData(document.getElementById("f-arr-datetime").value)
+            },
+            duration: document.getElementById("f-duration").value.trim(),
+            layovers: parseLayovers(document.getElementById("f-layovers").value),
+            confirmationCode: document.getElementById("f-confirmation").value.trim(),
+            notes: notes
+          };
+          break;
+        case "hotel":
+          seg.details = {
+            hotelName: document.getElementById("h-name").value.trim(),
+            address: document.getElementById("h-address").value.trim(),
+            checkIn: document.getElementById("h-checkin").value,
+            checkOut: document.getElementById("h-checkout").value,
+            nights: parseInt(document.getElementById("h-nights").value) || 0,
+            confirmationCode: document.getElementById("h-confirmation").value.trim(),
+            notes: notes
+          };
+          break;
+        case "train":
+          seg.details = {
+            operator: document.getElementById("t-operator").value.trim(),
+            trainNumber: document.getElementById("t-train-num").value.trim(),
+            departure: {
+              station: document.getElementById("t-dep-station").value.trim(),
+              city: document.getElementById("t-dep-city").value.trim(),
+              dateTime: dtLocalToData(document.getElementById("t-dep-datetime").value)
+            },
+            arrival: {
+              station: document.getElementById("t-arr-station").value.trim(),
+              city: document.getElementById("t-arr-city").value.trim(),
+              dateTime: dtLocalToData(document.getElementById("t-arr-datetime").value)
+            },
+            duration: document.getElementById("t-duration").value.trim(),
+            confirmationCode: document.getElementById("t-confirmation").value.trim(),
+            notes: notes
+          };
+          break;
+        case "activity":
+          seg.details = {
+            description: document.getElementById("a-description").value.trim(),
+            startDate: document.getElementById("a-start").value,
+            endDate: document.getElementById("a-end").value,
+            notes: notes
+          };
+          break;
+      }
+      return seg;
+    }
+
+    function parseLayovers(text) {
+      if (!text.trim()) return [];
+      return text.trim().split("\n").map(line => {
+        const parts = line.split(",").map(s => s.trim());
+        return { airport: parts[0] || "", city: parts[1] || "", duration: parts[2] || "" };
+      }).filter(l => l.airport || l.city);
+    }
+
+    async function saveSegment() {
+      const seg = buildSegmentFromForm();
+      if (!seg.title) {
+        showToast("Title is required", "error");
+        return;
+      }
+
+      const btn = document.getElementById("edit-save-btn");
+      btn.disabled = true;
+      btn.textContent = "Saving...";
+
+      try {
+        const leg = window.TRIP_DATA.legs.find(l => l.id === editingLegId);
+        if (!leg) throw new Error("Leg not found");
+
+        if (editingSegId) {
+          // Update existing
+          const idx = leg.segments.findIndex(s => s.id === editingSegId);
+          if (idx === -1) throw new Error("Segment not found");
+          leg.segments[idx] = seg;
+        } else {
+          // Add new
+          leg.segments.push(seg);
+        }
+
+        const action = editingSegId ? "Update" : "Add";
+        await commitTripData(`${action} ${seg.type}: ${seg.title}`);
+
+        closeEditModal();
+        renderAll();
+        showToast("Saved and published!", "success");
+      } catch (e) {
+        showToast("Save failed: " + e.message, "error");
+      }
+
+      btn.disabled = false;
+      btn.textContent = "Save";
+    }
+
+    async function deleteSegment() {
+      if (!editingSegId || !editingLegId) return;
+
+      const seg = findSegment(editingLegId, editingSegId);
+      if (!seg) return;
+
+      if (!confirm(`Delete "${seg.title}"? This cannot be undone.`)) return;
+
+      const btn = document.getElementById("edit-delete-btn");
+      btn.disabled = true;
+      btn.textContent = "Deleting...";
+
+      try {
+        const leg = window.TRIP_DATA.legs.find(l => l.id === editingLegId);
+        leg.segments = leg.segments.filter(s => s.id !== editingSegId);
+
+        await commitTripData(`Delete ${seg.type}: ${seg.title}`);
+
+        closeEditModal();
+        renderAll();
+        showToast("Deleted and published!", "success");
+      } catch (e) {
+        showToast("Delete failed: " + e.message, "error");
+      }
+
+      btn.disabled = false;
+      btn.textContent = "Delete";
+    }
+
     // ============================================================
     // Render: Header
     // ============================================================
@@ -95,11 +753,15 @@
       const endDate = formatDateLong(data.trip.endDate);
       const totalDays = daysBetween(data.trip.startDate, data.trip.endDate);
 
+      const hasToken = isEditable();
+      const settingsBtn = `<button class="header-settings-btn" onclick="openSettings()" title="Settings">${hasToken ? "\u2699\uFE0F" : "\u{1F512}"}</button>`;
+
       el.innerHTML = `
         <div class="header-content">
-          <h1>\u{1F30D} ${data.trip.name}</h1>
+          ${settingsBtn}
+          <h1>\u{1F30D} ${escapeHtml(data.trip.name)}</h1>
           <p class="header-dates">${startDate} \u2013 ${endDate} &middot; ${totalDays} days</p>
-          <p class="header-traveler">${data.trip.traveler}'s Trip Dashboard</p>
+          <p class="header-traveler">${escapeHtml(data.trip.traveler)}'s Trip Dashboard</p>
         </div>
       `;
     }
@@ -126,7 +788,6 @@
       } else if (today <= end) {
         const dayNum = daysBetween(data.trip.startDate, today.toISOString()) + 1;
         const totalDays = daysBetween(data.trip.startDate, data.trip.endDate);
-        // Find current leg
         let currentLocation = "";
         for (const leg of data.legs) {
           const legStart = new Date(leg.startDate + "T00:00");
@@ -163,7 +824,7 @@
       const allSegments = getAllSegments(data);
 
       allSegments.forEach(seg => {
-        if (seg.type === "activity") return; // don't count activities
+        if (seg.type === "activity") return;
         if (!stats[seg.type]) stats[seg.type] = { total: 0, booked: 0 };
         stats[seg.type].total++;
         if (seg.status === "booked") stats[seg.type].booked++;
@@ -226,9 +887,9 @@
         return `
           <li class="action-item">
             <span class="action-type-icon">${typeIcon(seg.type)}</span>
-            <span class="action-title">${seg.title}</span>
+            <span class="action-title">${escapeHtml(seg.title)}</span>
             ${dateInfo ? `<span class="action-date">${dateInfo}</span>` : ""}
-            <span class="action-leg">${seg.legEmoji} ${seg.legTitle}</span>
+            <span class="action-leg">${seg.legEmoji} ${escapeHtml(seg.legTitle)}</span>
           </li>
         `;
       }).join("");
@@ -260,11 +921,18 @@
     // ============================================================
     function renderTimeline(data) {
       const el = document.getElementById("timeline");
+      const editable = isEditable();
       let html = '<div class="timeline">';
 
       data.legs.forEach((leg, i) => {
         const dateRange = formatDateRange(leg.startDate, leg.endDate);
         const days = daysBetween(leg.startDate, leg.endDate);
+
+        const addBtnHtml = editable ? `
+          <div class="add-segment-bar">
+            <button class="btn-add-segment" onclick="openEditModal('${leg.id}', null)">+ Add Segment</button>
+          </div>
+        ` : "";
 
         html += `
           <div class="leg" id="${leg.id}">
@@ -273,13 +941,14 @@
                 <span class="leg-number">${i + 1}</span>
               </div>
               <div class="leg-info">
-                <h2 class="leg-title">${leg.emoji} ${leg.title}</h2>
-                <p class="leg-meta">${leg.location} &middot; ${dateRange} &middot; ${days} day${days !== 1 ? "s" : ""}</p>
+                <h2 class="leg-title">${leg.emoji} ${escapeHtml(leg.title)}</h2>
+                <p class="leg-meta">${escapeHtml(leg.location)} &middot; ${dateRange} &middot; ${days} day${days !== 1 ? "s" : ""}</p>
               </div>
             </div>
             <div class="segments-grid">
-              ${leg.segments.map(seg => renderSegmentCard(seg)).join("")}
+              ${leg.segments.map(seg => renderSegmentCard(leg.id, seg, editable)).join("")}
             </div>
+            ${addBtnHtml}
           </div>
         `;
       });
@@ -291,19 +960,22 @@
     // ============================================================
     // Render: Segment Card
     // ============================================================
-    function renderSegmentCard(seg) {
+    function renderSegmentCard(legId, seg, editable) {
       const statusClass = `status-${seg.status}`;
       const details = renderSegmentDetails(seg);
+
+      const editBtn = editable ? `<button class="btn-edit-card" onclick="openEditModal('${legId}', '${seg.id}')" title="Edit">\u270F\uFE0F</button>` : "";
 
       return `
         <div class="segment-card ${statusClass}">
           <div class="segment-header">
             <span class="segment-type-icon">${typeIcon(seg.type)}</span>
-            <h3 class="segment-title">${seg.title}</h3>
+            <h3 class="segment-title">${escapeHtml(seg.title)}</h3>
             <span class="status-badge ${statusClass}">${statusLabel(seg.status)}</span>
+            ${editBtn}
           </div>
           <div class="segment-details">${details}</div>
-          ${seg.details.notes ? `<p class="segment-notes">${seg.details.notes}</p>` : ""}
+          ${seg.details.notes ? `<p class="segment-notes">${escapeHtml(seg.details.notes)}</p>` : ""}
         </div>
       `;
     }
@@ -320,100 +992,50 @@
 
     function renderFlightDetails(d) {
       let html = '<div class="detail-grid">';
-
-      if (d.airline) {
-        html += `<div class="detail-row"><span class="detail-label">Airline</span><span class="detail-value">${d.airline}</span></div>`;
-      }
-      if (d.flightNumber) {
-        html += `<div class="detail-row"><span class="detail-label">Flight</span><span class="detail-value">${d.flightNumber}</span></div>`;
-      }
-      if (d.departure && d.departure.dateTime) {
-        html += `<div class="detail-row"><span class="detail-label">Departs</span><span class="detail-value">${formatDate(d.departure.dateTime)} at ${formatTime(d.departure.dateTime)} (${d.departure.airport})</span></div>`;
-      }
-      if (d.arrival && d.arrival.dateTime) {
-        html += `<div class="detail-row"><span class="detail-label">Arrives</span><span class="detail-value">${formatDate(d.arrival.dateTime)} at ${formatTime(d.arrival.dateTime)} (${d.arrival.airport})</span></div>`;
-      }
-      if (d.duration) {
-        html += `<div class="detail-row"><span class="detail-label">Duration</span><span class="detail-value">${d.duration}</span></div>`;
-      }
+      if (d.airline) html += `<div class="detail-row"><span class="detail-label">Airline</span><span class="detail-value">${escapeHtml(d.airline)}</span></div>`;
+      if (d.flightNumber) html += `<div class="detail-row"><span class="detail-label">Flight</span><span class="detail-value">${escapeHtml(d.flightNumber)}</span></div>`;
+      if (d.departure && d.departure.dateTime) html += `<div class="detail-row"><span class="detail-label">Departs</span><span class="detail-value">${formatDate(d.departure.dateTime)} at ${formatTime(d.departure.dateTime)} (${escapeHtml(d.departure.airport)})</span></div>`;
+      if (d.arrival && d.arrival.dateTime) html += `<div class="detail-row"><span class="detail-label">Arrives</span><span class="detail-value">${formatDate(d.arrival.dateTime)} at ${formatTime(d.arrival.dateTime)} (${escapeHtml(d.arrival.airport)})</span></div>`;
+      if (d.duration) html += `<div class="detail-row"><span class="detail-label">Duration</span><span class="detail-value">${escapeHtml(d.duration)}</span></div>`;
       if (d.layovers && d.layovers.length > 0) {
-        const layoverStr = d.layovers.map(l => `${l.city} (${l.airport}) \u2014 ${l.duration}`).join(", ");
+        const layoverStr = d.layovers.map(l => `${escapeHtml(l.city)} (${escapeHtml(l.airport)}) \u2014 ${escapeHtml(l.duration)}`).join(", ");
         html += `<div class="detail-row"><span class="detail-label">Layover${d.layovers.length > 1 ? "s" : ""}</span><span class="detail-value">${layoverStr}</span></div>`;
       }
-      if (d.confirmationCode) {
-        html += `<div class="detail-row"><span class="detail-label">Confirmation</span><span class="detail-value detail-code">${d.confirmationCode}</span></div>`;
-      }
-
+      if (d.confirmationCode) html += `<div class="detail-row"><span class="detail-label">Confirmation</span><span class="detail-value detail-code">${escapeHtml(d.confirmationCode)}</span></div>`;
       html += "</div>";
       return html;
     }
 
     function renderHotelDetails(d) {
       let html = '<div class="detail-grid">';
-
-      if (d.hotelName) {
-        html += `<div class="detail-row"><span class="detail-label">Hotel</span><span class="detail-value">${d.hotelName}</span></div>`;
-      }
-      if (d.address) {
-        html += `<div class="detail-row"><span class="detail-label">Address</span><span class="detail-value">${d.address}</span></div>`;
-      }
-      if (d.checkIn) {
-        html += `<div class="detail-row"><span class="detail-label">Check-in</span><span class="detail-value">${formatDate(d.checkIn)}</span></div>`;
-      }
-      if (d.checkOut) {
-        html += `<div class="detail-row"><span class="detail-label">Check-out</span><span class="detail-value">${formatDate(d.checkOut)}</span></div>`;
-      }
-      if (d.nights) {
-        html += `<div class="detail-row"><span class="detail-label">Nights</span><span class="detail-value">${d.nights}</span></div>`;
-      }
-      if (d.confirmationCode) {
-        html += `<div class="detail-row"><span class="detail-label">Confirmation</span><span class="detail-value detail-code">${d.confirmationCode}</span></div>`;
-      }
-
+      if (d.hotelName) html += `<div class="detail-row"><span class="detail-label">Hotel</span><span class="detail-value">${escapeHtml(d.hotelName)}</span></div>`;
+      if (d.address) html += `<div class="detail-row"><span class="detail-label">Address</span><span class="detail-value">${escapeHtml(d.address)}</span></div>`;
+      if (d.checkIn) html += `<div class="detail-row"><span class="detail-label">Check-in</span><span class="detail-value">${formatDate(d.checkIn)}</span></div>`;
+      if (d.checkOut) html += `<div class="detail-row"><span class="detail-label">Check-out</span><span class="detail-value">${formatDate(d.checkOut)}</span></div>`;
+      if (d.nights) html += `<div class="detail-row"><span class="detail-label">Nights</span><span class="detail-value">${d.nights}</span></div>`;
+      if (d.confirmationCode) html += `<div class="detail-row"><span class="detail-label">Confirmation</span><span class="detail-value detail-code">${escapeHtml(d.confirmationCode)}</span></div>`;
       html += "</div>";
       return html;
     }
 
     function renderTrainDetails(d) {
       let html = '<div class="detail-grid">';
-
-      if (d.operator) {
-        html += `<div class="detail-row"><span class="detail-label">Operator</span><span class="detail-value">${d.operator}</span></div>`;
-      }
-      if (d.trainNumber) {
-        html += `<div class="detail-row"><span class="detail-label">Train</span><span class="detail-value">${d.trainNumber}</span></div>`;
-      }
-      if (d.departure && d.departure.dateTime) {
-        html += `<div class="detail-row"><span class="detail-label">Departs</span><span class="detail-value">${formatDate(d.departure.dateTime)} at ${formatTime(d.departure.dateTime)} (${d.departure.station})</span></div>`;
-      } else if (d.departure && d.departure.station) {
-        html += `<div class="detail-row"><span class="detail-label">From</span><span class="detail-value">${d.departure.station}</span></div>`;
-      }
-      if (d.arrival && d.arrival.dateTime) {
-        html += `<div class="detail-row"><span class="detail-label">Arrives</span><span class="detail-value">${formatDate(d.arrival.dateTime)} at ${formatTime(d.arrival.dateTime)} (${d.arrival.station})</span></div>`;
-      } else if (d.arrival && d.arrival.station) {
-        html += `<div class="detail-row"><span class="detail-label">To</span><span class="detail-value">${d.arrival.station}</span></div>`;
-      }
-      if (d.duration) {
-        html += `<div class="detail-row"><span class="detail-label">Duration</span><span class="detail-value">${d.duration}</span></div>`;
-      }
-      if (d.confirmationCode) {
-        html += `<div class="detail-row"><span class="detail-label">Confirmation</span><span class="detail-value detail-code">${d.confirmationCode}</span></div>`;
-      }
-
+      if (d.operator) html += `<div class="detail-row"><span class="detail-label">Operator</span><span class="detail-value">${escapeHtml(d.operator)}</span></div>`;
+      if (d.trainNumber) html += `<div class="detail-row"><span class="detail-label">Train</span><span class="detail-value">${escapeHtml(d.trainNumber)}</span></div>`;
+      if (d.departure && d.departure.dateTime) html += `<div class="detail-row"><span class="detail-label">Departs</span><span class="detail-value">${formatDate(d.departure.dateTime)} at ${formatTime(d.departure.dateTime)} (${escapeHtml(d.departure.station)})</span></div>`;
+      else if (d.departure && d.departure.station) html += `<div class="detail-row"><span class="detail-label">From</span><span class="detail-value">${escapeHtml(d.departure.station)}</span></div>`;
+      if (d.arrival && d.arrival.dateTime) html += `<div class="detail-row"><span class="detail-label">Arrives</span><span class="detail-value">${formatDate(d.arrival.dateTime)} at ${formatTime(d.arrival.dateTime)} (${escapeHtml(d.arrival.station)})</span></div>`;
+      else if (d.arrival && d.arrival.station) html += `<div class="detail-row"><span class="detail-label">To</span><span class="detail-value">${escapeHtml(d.arrival.station)}</span></div>`;
+      if (d.duration) html += `<div class="detail-row"><span class="detail-label">Duration</span><span class="detail-value">${escapeHtml(d.duration)}</span></div>`;
+      if (d.confirmationCode) html += `<div class="detail-row"><span class="detail-label">Confirmation</span><span class="detail-value detail-code">${escapeHtml(d.confirmationCode)}</span></div>`;
       html += "</div>";
       return html;
     }
 
     function renderActivityDetails(d) {
       let html = '<div class="detail-grid">';
-
-      if (d.description) {
-        html += `<div class="detail-row"><span class="detail-label">Details</span><span class="detail-value">${d.description}</span></div>`;
-      }
-      if (d.startDate && d.endDate) {
-        html += `<div class="detail-row"><span class="detail-label">Dates</span><span class="detail-value">${formatDateRange(d.startDate, d.endDate)}</span></div>`;
-      }
-
+      if (d.description) html += `<div class="detail-row"><span class="detail-label">Details</span><span class="detail-value">${escapeHtml(d.description)}</span></div>`;
+      if (d.startDate && d.endDate) html += `<div class="detail-row"><span class="detail-label">Dates</span><span class="detail-value">${formatDateRange(d.startDate, d.endDate)}</span></div>`;
       html += "</div>";
       return html;
     }
@@ -423,12 +1045,26 @@
     // ============================================================
     function renderFooter() {
       const el = document.getElementById("footer");
+      const repo = localStorage.getItem("gh_repo") || "hhermine/trip-planner";
       el.innerHTML = `
         <div class="footer-content">
           <p>Last viewed: ${new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</p>
-          <p class="footer-note">Edit <code>trip-data.js</code> on GitHub to update bookings</p>
         </div>
       `;
+    }
+
+    // ============================================================
+    // Render All
+    // ============================================================
+    function renderAll() {
+      const data = window.TRIP_DATA;
+      document.title = `${data.trip.name} | Trip Dashboard`;
+      renderHeader(data);
+      renderCountdown(data);
+      renderStatusSummary(data);
+      renderActionItems(data);
+      renderTimeline(data);
+      renderFooter();
     }
 
     // ============================================================
@@ -440,17 +1076,25 @@
         document.body.innerHTML = '<p style="padding:2rem;color:red;">Error: trip-data.js not found or has a syntax error.</p>';
         return;
       }
-
-      document.title = `${data.trip.name} | Trip Dashboard`;
-      renderHeader(data);
-      renderCountdown(data);
-      renderStatusSummary(data);
-      renderActionItems(data);
-      renderTimeline(data);
-      renderFooter();
+      renderAll();
     }
 
     document.addEventListener("DOMContentLoaded", init);
+
+    // Close modals on overlay click
+    document.addEventListener("click", (e) => {
+      if (e.target.classList.contains("modal-overlay")) {
+        e.target.hidden = true;
+      }
+    });
+
+    // Close modals on Escape
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        document.getElementById("settings-modal").hidden = true;
+        document.getElementById("edit-modal").hidden = true;
+      }
+    });
   </script>
 </body>
 </html>

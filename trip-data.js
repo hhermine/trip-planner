@@ -115,18 +115,6 @@ window.TRIP_DATA = {
             "confirmationCode": "",
             "notes": "Book from July 27 so room is ready for 4:40 AM arrival on July 28"
           }
-        },
-        {
-          "id": "seg-activity-1",
-          "type": "activity",
-          "status": "booked",
-          "title": "Explore Armenia",
-          "details": {
-            "description": "Free time to explore Yerevan and surroundings",
-            "startDate": "2026-07-28",
-            "endDate": "2026-08-05",
-            "notes": ""
-          }
         }
       ]
     },

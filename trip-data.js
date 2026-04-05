@@ -49,7 +49,7 @@ window.TRIP_DATA = {
         {
           "id": "seg-hotel-1",
           "type": "hotel",
-          "status": "needs-booking",
+          "status": "booked",
           "title": "Copenhagen Hotel (1 night)",
           "details": {
             "hotelName": "Hotel Vesterbro",

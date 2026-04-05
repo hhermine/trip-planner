@@ -111,7 +111,7 @@ window.TRIP_DATA = {
             "address": "",
             "checkIn": "2026-08-03",
             "checkOut": "2026-08-06",
-            "nights": 10,
+            "nights": 3,
             "confirmationCode": "",
             "notes": "Book from July 27 so room is ready for 4:40 AM arrival on July 28"
           }

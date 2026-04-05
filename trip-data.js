@@ -57,7 +57,7 @@ window.TRIP_DATA = {
             "checkIn": "2026-07-26",
             "checkOut": "2026-07-27",
             "nights": 1,
-            "confirmationCode": "5178933479",
+            "confirmationCode": "",
             "notes": "Check in 3 PM, check out 11 AM"
           }
         },

@@ -109,7 +109,7 @@ window.TRIP_DATA = {
           "details": {
             "hotelName": "",
             "address": "",
-            "checkIn": "2026-07-27",
+            "checkIn": "2026-08-03",
             "checkOut": "2026-08-06",
             "nights": 10,
             "confirmationCode": "",

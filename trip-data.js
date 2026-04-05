@@ -90,21 +90,6 @@ window.TRIP_DATA = {
             "confirmationCode": "",
             "notes": "Overnight flight, arrives early morning"
           }
-        },
-        {
-          "id": "seg-hotel-1775356952884",
-          "type": "hotel",
-          "status": "booked",
-          "title": "Copenhagen Hotel",
-          "details": {
-            "hotelName": "Hotel Vesterbro",
-            "address": "Vesterbrogade 23-29, Vesterbro, 1620 Copenhagen, Denmark",
-            "checkIn": "2026-07-26",
-            "checkOut": "2026-07-27",
-            "nights": 0,
-            "confirmationCode": "5178933479",
-            "notes": "Check in 3pm, check out 11am"
-          }
         }
       ]
     },

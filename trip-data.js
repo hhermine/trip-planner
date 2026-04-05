@@ -104,16 +104,16 @@ window.TRIP_DATA = {
         {
           "id": "seg-hotel-2",
           "type": "hotel",
-          "status": "needs-booking",
-          "title": "Yerevan Hotel",
+          "status": "booked",
+          "title": "Yerevan Apartment",
           "details": {
-            "hotelName": "",
+            "hotelName": "2 bed 2 abth",
             "address": "",
             "checkIn": "2026-08-03",
             "checkOut": "2026-08-06",
             "nights": 3,
-            "confirmationCode": "",
-            "notes": ""
+            "confirmationCode": "5847682705",
+            "notes": "Check in 2pm, check out 11am"
           }
         }
       ]

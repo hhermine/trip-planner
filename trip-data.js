@@ -159,11 +159,11 @@ window.TRIP_DATA = {
         {
           "id": "seg-hotel-3",
           "type": "hotel",
-          "status": "needs-booking",
+          "status": "booked",
           "title": "Stockholm Hotel (5 nights)",
           "details": {
-            "hotelName": "",
-            "address": "",
+            "hotelName": "Radisson Blu Royal Viking Hotel, Stockholm",
+            "address": "Vasagatan 1, Norrmalm, 101 24 Stockholm, Sweden",
             "checkIn": "2026-08-06",
             "checkOut": "2026-08-11",
             "nights": 5,

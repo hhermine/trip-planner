@@ -170,18 +170,6 @@ window.TRIP_DATA = {
             "confirmationCode": "",
             "notes": ""
           }
-        },
-        {
-          "id": "seg-activity-2",
-          "type": "activity",
-          "status": "booked",
-          "title": "Explore Stockholm",
-          "details": {
-            "description": "Free time to explore Stockholm",
-            "startDate": "2026-08-07",
-            "endDate": "2026-08-10",
-            "notes": ""
-          }
         }
       ]
     },

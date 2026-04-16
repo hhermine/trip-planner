@@ -107,7 +107,7 @@ window.TRIP_DATA = {
           "status": "booked",
           "title": "Yerevan Apartment",
           "details": {
-            "hotelName": "2 bed 2 abth",
+            "hotelName": "2 bed 2 bath",
             "address": "",
             "checkIn": "2026-08-03",
             "checkOut": "2026-08-06",

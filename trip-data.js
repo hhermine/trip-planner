@@ -208,9 +208,9 @@ window.TRIP_DATA = {
           "id": "seg-hotel-4",
           "type": "hotel",
           "status": "booked",
-          "title": "Good Morning City Copenhagen Star",
+          "title": "Copenhagen Hotel (2 nights)",
           "details": {
-            "hotelName": "",
+            "hotelName": "Good Morning City Copenhagen Star",
             "address": "Colbjørnsensgade 13, Vesterbro, 1652 Copenhagen, Denmark",
             "checkIn": "2026-08-11",
             "checkOut": "2026-08-13",

@@ -168,7 +168,7 @@ window.TRIP_DATA = {
             "checkOut": "2026-08-11",
             "nights": 5,
             "confirmationCode": "",
-            "notes": "check in 3pm, check out 12pm"
+            "notes": ""
           }
         }
       ]
@@ -184,24 +184,24 @@ window.TRIP_DATA = {
         {
           "id": "seg-train-1",
           "type": "train",
-          "status": "needs-booking",
+          "status": "booked",
           "title": "Stockholm → Copenhagen Train",
           "details": {
-            "operator": "",
+            "operator": "SJ",
             "trainNumber": "",
             "departure": {
               "station": "Stockholm Central",
               "city": "Stockholm",
-              "dateTime": ""
+              "dateTime": "2026-08-11T11:20"
             },
             "arrival": {
               "station": "Copenhagen Central",
               "city": "Copenhagen",
-              "dateTime": ""
+              "dateTime": "2026-08-11T16:58"
             },
-            "duration": "",
+            "duration": "5h 35m",
             "confirmationCode": "",
-            "notes": "SJ or Snälltåget are common operators for this route"
+            "notes": ""
           }
         },
         {
@@ -216,7 +216,7 @@ window.TRIP_DATA = {
             "checkOut": "2026-08-13",
             "nights": 2,
             "confirmationCode": "",
-            "notes": "check in 3pm, check our 11am"
+            "notes": ""
           }
         },
         {
